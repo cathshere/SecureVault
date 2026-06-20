@@ -1,0 +1,136 @@
+from phishing_keywords import detect_keywords
+from url_checker import extract_urls
+
+import re
+import socket
+import requests
+import json
+import os
+from urllib.parse import urlparse
+
+from virustotal_api import check_url
+
+
+
+
+
+# Extract domain from URL
+def extract_domain(url):
+    return urlparse(url).netloc
+
+
+# Convert domain to IP address
+def get_ip(domain):
+    try:
+        return socket.gethostbyname(domain)
+    except:
+        return "Unknown"
+
+
+# Get geolocation details from IP address
+def get_location(ip):
+
+    if ip == "Unknown":
+        return {
+            "country": "Unknown",
+            "city": "Unknown",
+            "isp": "Unknown"
+        }
+
+    try:
+        response = requests.get(f"http://ip-api.com/json/{ip}")
+
+        data = response.json()
+
+        return {
+            "country": data.get("country"),
+            "city": data.get("city"),
+            "isp": data.get("isp")
+        }
+
+    except:
+        return {
+            "country": "Unknown",
+            "city": "Unknown",
+            "isp": "Unknown"
+        }
+
+
+# Calculate phishing score and threat level
+def calculate_score(text):
+
+    score = 0
+
+    urls = extract_urls(text)
+
+    if len(urls) > 0:
+        score += 20
+
+    keyword_score, tactics = detect_keywords(text)
+
+    score += keyword_score
+
+    if score < 30:
+        level = "LOW"
+
+    elif score < 60:
+        level = "MEDIUM"
+
+    else:
+        level = "HIGH"
+
+    return score, level, tactics
+
+
+# Main email analysis function
+# Main email analysis function
+def analyze_email(text):
+
+    score, level, tactics = calculate_score(text)
+
+    urls = extract_urls(text)
+
+    url_details = []
+
+    for url in urls:
+
+        domain = extract_domain(url)
+
+        ip = get_ip(domain)
+
+        location = get_location(ip)
+
+        vt_result = check_url(url)
+
+    url_details.append({
+    "url": url,
+    "domain": domain,
+    "ip": ip,
+    "country": location["country"],
+    "city": location["city"],
+    "isp": location["isp"],
+    "malicious_engines": vt_result["malicious"],
+    "suspicious_engines": vt_result["suspicious"]
+})
+
+    report = {
+        "risk_score": score,
+        "threat_level": level,
+        "tactics": tactics,
+        "url_details": url_details
+    }
+
+    return report
+
+
+# Save report to JSON file
+def save_report(report):
+
+    os.makedirs("phy_reports", exist_ok=True)
+
+    filename = "phy_reports/report.json"
+
+    with open(filename, "w") as file:
+        json.dump(report, file, indent=4)
+
+    print("\nReport saved successfully!")

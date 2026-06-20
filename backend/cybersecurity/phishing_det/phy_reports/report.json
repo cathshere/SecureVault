@@ -1,0 +1,20 @@
+{
+    "risk_score": 50,
+    "threat_level": "MEDIUM",
+    "tactics": [
+        "Credential Theft",
+        "Click Bait"
+    ],
+    "url_details": [
+        {
+            "url": "https://phishing-demo.local",
+            "domain": "phishing-demo.local",
+            "ip": "Unknown",
+            "country": "Unknown",
+            "city": "Unknown",
+            "isp": "Unknown",
+            "malicious_engines": 8,
+            "suspicious_engines": 2
+        }
+    ]
+}
