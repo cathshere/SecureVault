@@ -58,9 +58,11 @@ def get_location(ip):
 
 # Calculate phishing score and threat level
 def calculate_score(text):
-
+    text = text.replace("hxxps://", "https://")
+    text = text.replace("hxxp://", "http://")
+    text = text.replace("[.]", ".")
     score = 0
-
+    
     urls = extract_urls(text)
 
     if len(urls) > 0:
@@ -69,6 +71,7 @@ def calculate_score(text):
     keyword_score, tactics = detect_keywords(text)
 
     score += keyword_score
+    score = min(score, 100)
 
     if score < 30:
         level = "LOW"
@@ -86,13 +89,17 @@ def calculate_score(text):
 # Main email analysis function
 def analyze_email(text):
 
-    score, level, tactics = calculate_score(text)
+   text = text.replace("hxxps://", "https://")
+   text = text.replace("hxxp://", "http://")
+   text = text.replace("[.]", ".")
 
-    urls = extract_urls(text)
+   score, level, tactics = calculate_score(text)
 
-    url_details = []
+   urls = extract_urls(text)
 
-    for url in urls:
+   url_details = []
+
+   for url in urls:
 
         domain = extract_domain(url)
 
@@ -102,25 +109,25 @@ def analyze_email(text):
 
         vt_result = check_url(url)
 
-    url_details.append({
-    "url": url,
-    "domain": domain,
-    "ip": ip,
-    "country": location["country"],
-    "city": location["city"],
-    "isp": location["isp"],
-    "malicious_engines": vt_result["malicious"],
-    "suspicious_engines": vt_result["suspicious"]
-})
+        url_details.append({
+            "url": url,
+            "domain": domain,
+            "ip": ip,
+            "country": location["country"],
+            "city": location["city"],
+            "isp": location["isp"],
+            "malicious_engines": vt_result["malicious"],
+            "suspicious_engines": vt_result["suspicious"]
+        })
 
-    report = {
+        report = {
         "risk_score": score,
         "threat_level": level,
         "tactics": tactics,
         "url_details": url_details
     }
 
-    return report
+        return report
 
 
 # Save report to JSON file
