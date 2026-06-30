@@ -260,58 +260,27 @@ async function analyzeEmail() {
 
         console.log("Status:", response.status);
 
-        if (!response.ok) {
-            throw new Error("Server returned " + response.status);
-        }
+if (!response.ok) {
+    const text = await response.text();
+    console.log("Server Error:", text);
+    throw new Error("Server returned " + response.status);
+}
 
-        const data = await response.json();
+const data = await response.json();
 
-        console.log(data);
+console.log("API Response:", data);
 
-        renderResult(data);
+renderResult(data);
 
     }
 
     catch(err) {
 
-        console.error(err);
+console.error(err);
 
-        showError("Could not connect to Flask API.");
+showError(err.message);
 
-        const demo = {
-
-            risk_score:65,
-
-            threat_level:"HIGH",
-
-            tactics:[
-                "Urgency",
-                "Credential Theft",
-                "Click Bait"
-            ],
-
-            url_details:[{
-
-                domain:"google.com",
-
-                ip:"142.251.222.142",
-
-                country:"United States",
-
-                city:"Mountain View",
-
-                isp:"Google LLC",
-
-                malicious_engines:"Unknown",
-
-                suspicious_engines:"Unknown"
-
-            }]
-        };
-
-        renderResult(demo);
-
-    }
+}
 
     finally {
 
@@ -321,7 +290,18 @@ async function analyzeEmail() {
 
 }
 
+
 function renderResult(data) {
+  if (!data) {
+        showError("Invalid response from server.");
+        return;
+    }
+
+    if (data.risk_score === undefined || data.risk_score === null) {
+        showError("Missing risk score in response.");
+        console.log("Bad API response:", data);
+        return;
+    }
 
     const score = data.risk_score;
 
@@ -359,9 +339,9 @@ function renderResult(data) {
         cfg.scoreColor;
 
     document.getElementById("tacticsList").innerHTML =
-        buildTacticsHTML(data.tactics);
+      buildTacticsHTML(data.tactics || []);
 
-    if (data.url_details.length > 0) {
+        if (data.url_details && data.url_details.length > 0) {
 
         document.getElementById("urlCard").style.display =
             "block";
