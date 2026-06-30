@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from email_analyzer import analyze_email
+import json
+import os
 
 app = Flask(__name__)
 
@@ -53,10 +55,20 @@ def urlscanner():
 # ======================================================
 @app.route("/reports")
 def reports():
+    filepath = "reports/report_history.json"
+    if os.path.exists(filepath):
+        with open(filepath, "r") as file:
+            try:
+                report_list = json.load(file)
+            except json.JSONDecodeError:
+                report_list = []
+    else:
+        report_list = []
 
     return render_template(
         "reports.html",
-        active_page="reports"
+        active_page="reports",
+        reports=report_list
     )
 
 
@@ -89,17 +101,23 @@ def auditlog():
 # ======================================================
 @app.route("/analyze", methods=["POST"])
 def analyze():
+    try:
+        data = request.get_json()
 
-    data = request.get_json()
+        if not data or "email" not in data:
+            return jsonify({"error": "No email content provided."}), 400
 
-    if not data or "email" not in data:
-        return jsonify({
-            "error": "No email content provided."
-        }), 400
+        report = analyze_email(data["email"])
 
-    report = analyze_email(data["email"])
+        if not report:
+            return jsonify({"error": "Analysis failed to produce a report."}), 500
 
-    return jsonify(report)
+        print("REPORT:", report)
+        return jsonify(report)
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 
 # ======================================================
