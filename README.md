@@ -275,35 +275,6 @@ Pages include:
 
 ---
 
-#  Project Structure
-
-```
-SecureVault/
-│
-├── app.py
-├── requirements.txt
-├── secret.key
-├── generate_key.py
-│
-├── uploads/
-│
-├── instance/
-│     └── users.db
-│
-├── static/
-│     ├── style.css
-│     └── images/
-│
-├── templates/
-│     ├── login.html
-│     ├── register.html
-│     ├── index.html
-│     ├── files.html
-│     ├── logs.html
-│     └── phishing.html
-│
-└── README.md
-```
 
 ---
 
